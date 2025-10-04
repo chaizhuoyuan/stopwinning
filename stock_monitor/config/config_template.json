@@ -1,0 +1,17 @@
+{
+  "tushare": {
+    "api_key": "YOUR_TUSHARE_API_KEY"
+  },
+  "email": {
+    "smtp_server": "smtp.gmail.com",
+    "smtp_port": 587,
+    "from_email": "YOUR_EMAIL@gmail.com",
+    "password": "YOUR_APP_PASSWORD",
+    "receivers": ["receiver1@gmail.com", "receiver2@gmail.com"],
+    "use_tls": true
+  },
+  "stock_list_path": "Targetstocklist.csv",
+  "schedule": {
+    "run_time": "15:30"
+  }
+}
