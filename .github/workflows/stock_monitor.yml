@@ -1,4 +1,4 @@
-name: Daily Stock Monitor
+name: Daily Stock Monitor with Summary
 
 on:
   schedule:
