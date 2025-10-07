@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 class EmailNotifier:
-    def __init__(self, smtp_server: str, smtp_port: int, from_email: str, 
+    def __init__(self, smtp_server: str, smtp_port: int, from_email: str,
                  password: str, receivers: List[str], use_tls: bool = True):
         self.smtp_server = smtp_server
         self.smtp_port = smtp_port
@@ -17,6 +17,15 @@ class EmailNotifier:
         self.password = password
         self.receivers = receivers
         self.use_tls = use_tls
+
+    def _get_eastmoney_url(self, stock_code: str) -> str:
+        """Generate EastMoney URL for stock code"""
+        # Remove exchange suffix (.SH, .SZ, .BJ)
+        code = stock_code.split('.')[0]
+        exchange = stock_code.split('.')[1].lower() if '.' in stock_code else 'sz'
+
+        # EastMoney URL format: http://quote.eastmoney.com/{exchange}{code}.html
+        return f"http://quote.eastmoney.com/{exchange}{code}.html"
     
     def send_alert(self, alerts: List[Dict]) -> bool:
         if not alerts:
@@ -57,6 +66,7 @@ class EmailNotifier:
 
         for alert in alerts:
             stock_code = alert['stock_code']
+            eastmoney_url = self._get_eastmoney_url(stock_code)
             alert_types = []
 
             # 9/30 baseline drop alert
@@ -74,7 +84,7 @@ class EmailNotifier:
                 alert_types.append(f"布林线上方跌{abs(drop_pct):.1f}%")
 
             if alert_types:
-                summary_lines.append(f"{stock_code}: {', '.join(alert_types)}")
+                summary_lines.append(f'<a href="{eastmoney_url}" target="_blank">{stock_code}</a>: {", ".join(alert_types)}')
 
         return '<br>'.join(summary_lines)
     
@@ -94,6 +104,8 @@ class EmailNotifier:
                 .alert-summary {{ background-color: #fff3e0; padding: 15px; border-radius: 5px; margin-bottom: 20px; }}
                 .stock-section {{ margin: 20px 0; padding: 15px; border: 1px solid #e0e0e0; border-radius: 5px; }}
                 .alert-type {{ background-color: #e3f2fd; padding: 10px; margin: 10px 0; border-radius: 3px; }}
+                a {{ color: #1976d2; text-decoration: none; font-weight: bold; }}
+                a:hover {{ text-decoration: underline; }}
             </style>
         </head>
         <body>
@@ -112,9 +124,11 @@ class EmailNotifier:
         """
 
         for alert in alerts:
+            stock_code = alert['stock_code']
+            eastmoney_url = self._get_eastmoney_url(stock_code)
             html += f"""
             <div class="stock-section">
-                <h4>{alert['stock_code']} - {alert['trade_date']} 收盘价: ¥{alert['close_price']:.2f}</h4>
+                <h4><a href="{eastmoney_url}" target="_blank" style="color: #1976d2; text-decoration: none;">{stock_code}</a> - {alert['trade_date']} 收盘价: ¥{alert['close_price']:.2f}</h4>
             """
 
             # Baseline drop alert
