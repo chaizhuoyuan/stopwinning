@@ -3,7 +3,6 @@ import pandas as pd
 from datetime import datetime, timedelta
 import logging
 from typing import Dict, Optional, List
-import time
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +12,6 @@ class TushareClient:
         ts.set_token(api_key)
         self.pro = ts.pro_api()
         self.daily_request_count = 0
-        self.last_request_time = None
         
     def get_stock_data(self, stock_code: str, days: int = 30) -> Optional[pd.DataFrame]:
         try:
@@ -43,26 +41,23 @@ class TushareClient:
     
     def get_multiple_stocks_data(self, stock_codes: List[str], days: int = 30) -> Dict[str, pd.DataFrame]:
         stock_data = {}
-        
+
         for stock_code in stock_codes:
             logger.info(f"Fetching data for {stock_code}")
             data = self.get_stock_data(stock_code, days)
             if data is not None:
                 stock_data[stock_code] = data
-            time.sleep(0.2)
-        
+            # No delay needed - 500 requests/minute quota
+
         return stock_data
     
     def _rate_limit(self):
-        if self.last_request_time:
-            time_since_last_request = time.time() - self.last_request_time
-            if time_since_last_request < 0.2:
-                time.sleep(0.2 - time_since_last_request)
-        
-        self.last_request_time = time.time()
+        # 500 requests/minute quota - no delay needed for typical usage
         self.daily_request_count += 1
-        
-        if self.daily_request_count >= 2000:
+
+        if self.daily_request_count >= 500:
+            logger.warning("Approaching per-minute request limit")
+        elif self.daily_request_count >= 2000:
             logger.warning("Approaching daily request limit")
     
     def get_latest_trading_day(self) -> str:
