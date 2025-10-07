@@ -59,12 +59,6 @@ class EmailNotifier:
             stock_code = alert['stock_code']
             alert_types = []
 
-            # MA breach alerts
-            if alert.get('breached_mas'):
-                breached_periods = [str(ma['ma_period']) for ma in alert['breached_mas']]
-                breached_text = '、'.join(breached_periods)
-                alert_types.append(f"突破{breached_text}日均线")
-
             # 9/30 baseline drop alert
             if alert.get('baseline_drop_alert'):
                 drop_pct = alert['baseline_drop_alert']['drop_percentage']
@@ -122,31 +116,6 @@ class EmailNotifier:
             <div class="stock-section">
                 <h4>{alert['stock_code']} - {alert['trade_date']} 收盘价: ¥{alert['close_price']:.2f}</h4>
             """
-
-            # MA breach alerts
-            if alert.get('breached_mas'):
-                html += """
-                <div class="alert-type">
-                    <strong>均线突破警报:</strong>
-                    <table>
-                        <tr>
-                            <th>突破均线</th>
-                            <th>均线价格</th>
-                            <th>偏离幅度</th>
-                        </tr>
-                """
-                for ma_breach in alert['breached_mas']:
-                    html += f"""
-                        <tr>
-                            <td>MA{ma_breach['ma_period']}</td>
-                            <td>¥{ma_breach['ma_value']:.2f}</td>
-                            <td class="negative">{ma_breach['percentage']:.2f}%</td>
-                        </tr>
-                    """
-                html += """
-                    </table>
-                </div>
-                """
 
             # Baseline drop alert
             if alert.get('baseline_drop_alert'):

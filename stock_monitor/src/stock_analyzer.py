@@ -168,39 +168,25 @@ class StockAnalyzer:
             logger.warning(f"No data available for {stock_code}")
             return None
 
-        # Check all alert conditions
-        breaches = self.check_ma_breach(df)
+        # Check only the 3 new alert conditions
         baseline_drop = self.check_baseline_drop(df)
         mtr_drop = self.check_mtr_drop(df)
         boll_drop = self.check_boll_drop(df)
 
         # If no alerts triggered, return None
-        if not any(breaches.values()) and not baseline_drop and not mtr_drop and not boll_drop:
+        if not baseline_drop and not mtr_drop and not boll_drop:
             return None
 
-        df_with_ma = self.calculate_moving_averages(df)
-        latest_row = df_with_ma.iloc[-1]
+        latest_row = df.iloc[-1]
 
         analysis = {
             'stock_code': stock_code,
             'close_price': latest_row['close'],
             'trade_date': latest_row['trade_date'].strftime('%Y-%m-%d'),
-            'breached_mas': [],
             'baseline_drop_alert': baseline_drop,
             'mtr_drop_alert': mtr_drop,
             'boll_drop_alert': boll_drop
         }
-
-        # Add MA breach details
-        for period in self.ma_periods:
-            ma_col = f'MA{period}'
-            if breaches.get(f'MA{period}', False):
-                analysis['breached_mas'].append({
-                    'ma_period': period,
-                    'ma_value': latest_row[ma_col],
-                    'difference': latest_row['close'] - latest_row[ma_col],
-                    'percentage': ((latest_row['close'] - latest_row[ma_col]) / latest_row[ma_col]) * 100
-                })
 
         return analysis
     

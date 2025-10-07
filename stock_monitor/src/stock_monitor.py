@@ -63,16 +63,16 @@ class StockMonitor:
             logger.info(f"Retrieved data for {len(stock_data)} stocks")
             
             alerts = self.analyzer.analyze_multiple_stocks(stock_data)
-            
+
             if alerts:
-                logger.warning(f"Found {len(alerts)} stocks breaching MA levels")
+                logger.warning(f"Found {len(alerts)} stocks with alerts")
                 success = self.email_notifier.send_alert(alerts)
                 if success:
                     logger.info("Alert email sent successfully")
                 else:
                     logger.error("Failed to send alert email")
             else:
-                logger.info("No MA breaches detected")
+                logger.info("No alerts detected")
             
             logger.info("Analysis completed successfully")
             
@@ -107,7 +107,7 @@ class StockMonitor:
 def main():
     import argparse
     
-    parser = argparse.ArgumentParser(description='Stock Monitor - Monitor Chinese stocks for MA breaches')
+    parser = argparse.ArgumentParser(description='Stock Monitor - Monitor Chinese stocks for baseline drops, MTR drops, and Bollinger Band drops')
     parser.add_argument('--config', type=str, help='Path to config file')
     parser.add_argument('--run-once', action='store_true', help='Run analysis once and exit')
     parser.add_argument('--test-email', action='store_true', help='Send test email')
