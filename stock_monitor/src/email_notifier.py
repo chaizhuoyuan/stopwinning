@@ -26,6 +26,25 @@ class EmailNotifier:
 
         # EastMoney URL format: http://quote.eastmoney.com/{exchange}{code}.html
         return f"http://quote.eastmoney.com/{exchange}{code}.html"
+
+    def _get_tradingview_url(self, stock_code: str) -> str:
+        """Generate TradingView URL for stock code"""
+        # Remove exchange suffix and convert to TradingView format
+        code = stock_code.split('.')[0]
+        exchange_suffix = stock_code.split('.')[1].upper() if '.' in stock_code else 'SZ'
+
+        # TradingView uses SSE for Shanghai and SZSE for Shenzhen
+        if exchange_suffix == 'SH':
+            tv_exchange = 'SSE'
+        elif exchange_suffix == 'SZ':
+            tv_exchange = 'SZSE'
+        elif exchange_suffix == 'BJ':
+            tv_exchange = 'BSE'
+        else:
+            tv_exchange = 'SZSE'
+
+        # TradingView URL format: https://www.tradingview.com/chart/?symbol={exchange}:{code}
+        return f"https://www.tradingview.com/chart/?symbol={tv_exchange}%3A{code}"
     
     def send_alert(self, alerts: List[Dict]) -> bool:
         if not alerts:
@@ -67,6 +86,7 @@ class EmailNotifier:
         for alert in alerts:
             stock_code = alert['stock_code']
             eastmoney_url = self._get_eastmoney_url(stock_code)
+            tradingview_url = self._get_tradingview_url(stock_code)
             alert_types = []
 
             # 9/30 baseline drop alert
@@ -84,7 +104,8 @@ class EmailNotifier:
                 alert_types.append(f"布林线上方跌{abs(drop_pct):.1f}%")
 
             if alert_types:
-                summary_lines.append(f'<a href="{eastmoney_url}" target="_blank">{stock_code}</a>: {", ".join(alert_types)}')
+                links = f'<a href="{eastmoney_url}" target="_blank">{stock_code}</a> [<a href="{tradingview_url}" target="_blank">TV</a>]'
+                summary_lines.append(f'{links}: {", ".join(alert_types)}')
 
         return '<br>'.join(summary_lines)
     
@@ -126,9 +147,14 @@ class EmailNotifier:
         for alert in alerts:
             stock_code = alert['stock_code']
             eastmoney_url = self._get_eastmoney_url(stock_code)
+            tradingview_url = self._get_tradingview_url(stock_code)
             html += f"""
             <div class="stock-section">
-                <h4><a href="{eastmoney_url}" target="_blank" style="color: #1976d2; text-decoration: none;">{stock_code}</a> - {alert['trade_date']} 收盘价: ¥{alert['close_price']:.2f}</h4>
+                <h4>
+                    <a href="{eastmoney_url}" target="_blank" style="color: #1976d2; text-decoration: none;">{stock_code}</a>
+                    [<a href="{tradingview_url}" target="_blank" style="color: #1976d2; text-decoration: none; font-size: 0.9em;">TradingView</a>]
+                    - {alert['trade_date']} 收盘价: ¥{alert['close_price']:.2f}
+                </h4>
             """
 
             # Baseline drop alert
