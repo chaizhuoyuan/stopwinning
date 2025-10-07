@@ -57,8 +57,9 @@ class StockMonitor:
         try:
             stock_codes = self.stock_reader.read_stock_codes()
             logger.info(f"Monitoring {len(stock_codes)} stocks")
-            
-            stock_data = self.tushare_client.get_multiple_stocks_data(stock_codes, days=45)
+
+            # Fetch 150 days to ensure we have enough data for 20-week MA and baseline date
+            stock_data = self.tushare_client.get_multiple_stocks_data(stock_codes, days=150)
             logger.info(f"Retrieved data for {len(stock_data)} stocks")
             
             alerts = self.analyzer.analyze_multiple_stocks(stock_data)
