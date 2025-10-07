@@ -1,4 +1,4 @@
-name: Daily Stock Monitor with Summary
+name: Daily Stock Monitor - Multi-Alert System
 
 on:
   schedule:
